@@ -121,7 +121,7 @@ The build inputs are these files at the repo root:
 
 Jenkins fetches this repo from GitHub, runs `BlibliPipeline`, reads the version
 from `pom.xml`, and publishes the image to Artifact Registry (GCR) with a tag
-like `keycloak-...-0.1.0-SNAPSHOT`. Deployment is a **separate repo** (Helm
+like `keycloak-...-1.0.0-1-SNAPSHOT`. Deployment is a **separate repo** (Helm
 values + a deploy Jenkinsfile) to be created later — same split as
 `mcp-customer-exp` / `nonprod-deployment-gdn-mcp-customer-exp`.
 

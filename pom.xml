@@ -13,7 +13,7 @@
 
   <groupId>com.gdn.iam</groupId>
   <artifactId>keycloak</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>1.0.0-1-SNAPSHOT</version>
 
   <scm>
     <connection>scm:git:ssh://git@github.com/gdncomm-diko-raditya/keycloak.git</connection>
