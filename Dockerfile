@@ -38,3 +38,7 @@ FROM quay.io/keycloak/keycloak:${KEYCLOAK_VERSION}
 COPY --from=builder /opt/keycloak/ /opt/keycloak/
 
 ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]
+# Default to an optimized start so the image boots correctly when an
+# orchestrator (e.g. the shared Helm chart) runs it with no extra args.
+# Overridable: `docker run <img> start-dev`, or compose's `command:`.
+CMD ["start", "--optimized"]

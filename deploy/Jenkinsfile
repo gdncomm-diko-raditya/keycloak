@@ -1,0 +1,14 @@
+// CD pipeline for the qa2 (lower) environment.
+// Mirrors nonprod-deployment-gdn-mcp-customer-exp. The Helm chart lives in the
+// shared library; this repo only supplies values under deployment/.
+@Library('gcp-jenkins-library@2.2.7')_
+app(
+  appName: "keycloak",
+  type: "backend",
+  environment: "qa2",
+  application: [
+    tribe: "iam",
+    squad: "iam",
+    service_name: "keycloak"
+  ]
+)

@@ -1,0 +1,66 @@
+fullnameOverride: keycloak
+
+rollingUpdate:
+  maxSurge: 1
+
+application:
+  name: keycloak
+  namespace: iam
+  containerPort: 8080
+  # Keycloak serves /health/ready on MANAGEMENT port 9000, not 8080.
+  # This `healthCheck` path assumes the chart can probe port 9000. If the chart
+  # only probes containerPort (8080), enable the legacy observability interface
+  # in the Dockerfile builder (KC_LEGACY_OBSERVABILITY_INTERFACE=true) so
+  # /health is served on 8080. Confirm chart behavior with the platform team.
+  healthCheck: /health/ready
+  replicaCount: 1
+  # Keycloak (JVM) starts slowly + migrates DB on first boot — be generous.
+  readinessInitialDelaySeconds: 10
+  readinessPeriodSeconds: 10
+  livenessInitialDelaySeconds: 30
+  livenessPeriodSeconds: 20
+  readinessTimeoutSeconds: 5
+  startupProbe:
+    startupFailureThreshold: 360
+    startupPeriodSeconds: 1
+
+hpa:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 2
+
+# Sized for the Keycloak JVM — NOT the 64Mi the Node template used.
+resources:
+  requests:
+    cpu: 250m
+    memory: 768Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi
+
+image:
+  # Confirm the actual path/tag the app-repo CI publishes to.
+  repository: asia-southeast1-docker.pkg.dev/nonprod-utility-233414/docker-snapshots/base-images/keycloak
+
+global:
+  namespace: iam
+
+metadata:
+  labels:
+    tribe: iam
+    squad: iam
+
+# Non-secret config only. DB password + bootstrap admin password MUST come from
+# a Secret via the chart's secret mechanism — do NOT put them here in plaintext.
+env:
+  KC_DB: postgres
+  # Point at CloudSQL or an in-cluster Postgres service (decision pending).
+  KC_DB_URL: jdbc:postgresql://<postgres-host>:5432/keycloak
+  KC_DB_USERNAME: keycloak
+  # Behind the ingress/LB, TLS is terminated upstream:
+  KC_HTTP_ENABLED: "true"
+  KC_PROXY_HEADERS: xforwarded
+  KC_HOSTNAME_STRICT: "false"
+  KC_HEALTH_ENABLED: "true"
+  KC_METRICS_ENABLED: "true"
+  # KC_HOSTNAME is set per-env (see qa2/values.yaml) to the ingress domain.

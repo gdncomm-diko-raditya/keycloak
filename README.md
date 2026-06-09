@@ -75,6 +75,27 @@ All settings have local-friendly defaults in `docker-compose.yml`; override via 
 > **Local only.** `KC_HTTP_ENABLED=true` and `KC_HOSTNAME_STRICT=false` make
 > local testing easy but must not be used in production.
 
+---
+
+## Deploying to Kubernetes (gdncomm convention)
+
+gdncomm ships services with a **two-repo, two-pipeline** model on Jenkins +
+a shared Helm library + **Google Artifact Registry** (`asia-southeast1`):
+
+- **This (app) repo** builds & pushes the image. [`Jenkinsfile`](Jenkinsfile)
+  uses `BlibliPipeline([type:'docker', ...])` to build the Dockerfile and push
+  to Artifact Registry. The Dockerfile defaults to `CMD ["start","--optimized"]`
+  so the image boots correctly when the chart runs it with no args.
+- **A separate deployment repo** (`nonprod-deployment-gdn-keycloak`, branch per
+  env) deploys it via the shared chart, supplying only Helm values. A template
+  for that repo lives in [`deploy/`](deploy/) — see [`deploy/README.md`](deploy/README.md).
+
+**Keycloak-specific gaps to resolve with the platform team** (it's stateful and
+JVM-heavy, unlike the stateless Node apps the chart assumes): a PostgreSQL
+source (CloudSQL vs in-cluster), secret-backed DB/admin credentials, the health
+probe port (9000 vs 8080), and right-sized resources. All flagged in
+[`deploy/README.md`](deploy/README.md).
+
 ## Notes on the Dockerfile
 The image uses Keycloak's recommended two-stage build: stage 1 runs
 `kc.sh build` with `KC_DB=postgres` baked in, stage 2 is a slim runtime started
