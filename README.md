@@ -60,6 +60,11 @@ on a shared pod/network using plain `podman` commands:
 3. Point a SAML SP at that metadata, or use the SAML test client and complete
    a login with the realm user.
 
+### Use Keycloak as the IdP for the local CAS server
+To make the local Apereo CAS server (`Code/cas`) delegate login to this Keycloak
+over OIDC **and** SAML, run `./scripts/setup-cas-realm.sh` (creates a `cas` realm
+with both clients + a test user) and follow [docs/cas-integration.md](docs/cas-integration.md).
+
 ---
 
 ## Configuration
