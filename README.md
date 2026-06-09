@@ -110,23 +110,20 @@ environment.
 This repo is structured like gdncomm's other app repos (e.g. `mcp-customer-exp`)
 so the shared Jenkins pipeline can build and push the image — no manual push.
 
-The build inputs are just three files at the repo root:
+The build inputs are these files at the repo root:
 
 | File | Role |
 |---|---|
 | [`Dockerfile`](Dockerfile) | Builds the optimized Keycloak image. Defaults to `CMD ["start","--optimized"]` so it boots with no extra args. |
 | [`.dockerignore`](.dockerignore) | Keeps the build context small (excludes local-dev/docs). |
+| [`pom.xml`](pom.xml) | **Version carrier** the pipeline reads to tag the image. Not a real Maven build — bump `<version>` to cut a new image version. Mirrors mcp-customer-exp's build-branch pom. |
 | [`Jenkinsfile`](Jenkinsfile) | `@Library('jenkins-ci-automation@develop')` → `BlibliPipeline([type:'docker', ...])`. Builds the Dockerfile and pushes to `asia-southeast1-docker.pkg.dev/nonprod-utility-233414/docker-releases/blibli-apps`, tribe/squad `iam`, `service_name: keycloak`. |
 
-Jenkins fetches this repo from GitHub, runs `BlibliPipeline`, and publishes the
-image to Artifact Registry (GCR). Deployment is a **separate repo** (Helm values
-+ a deploy Jenkinsfile) to be created later — same split as `mcp-customer-exp` /
-`nonprod-deployment-gdn-mcp-customer-exp`.
-
-> **One thing to confirm with the platform team:** how `BlibliPipeline
-> type:'docker'` derives the image **version/tag**. For the Node app it came
-> from `package.json`; Keycloak has none, so the version likely needs a
-> `VERSION` file or a build parameter.
+Jenkins fetches this repo from GitHub, runs `BlibliPipeline`, reads the version
+from `pom.xml`, and publishes the image to Artifact Registry (GCR) with a tag
+like `keycloak-...-0.1.0-SNAPSHOT`. Deployment is a **separate repo** (Helm
+values + a deploy Jenkinsfile) to be created later — same split as
+`mcp-customer-exp` / `nonprod-deployment-gdn-mcp-customer-exp`.
 
 ## Notes on the Dockerfile
 The image uses Keycloak's recommended two-stage build: stage 1 runs
