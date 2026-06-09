@@ -1,0 +1,15 @@
+# Keep the build context small. The image only needs the Dockerfile (and, in
+# Steps 2 & 3, themes/ and providers/). Everything below is local-dev or docs.
+.git
+.gitignore
+.env
+.env*
+*.log
+.DS_Store
+.claude/
+.idea/
+
+# Local-run helpers — not used by the image build
+docker-compose.yml
+scripts/
+README.md

@@ -77,24 +77,28 @@ All settings have local-friendly defaults in `docker-compose.yml`; override via 
 
 ---
 
-## Deploying to Kubernetes (gdncomm convention)
+## CI: build & push the image (Jenkins → Artifact Registry)
 
-gdncomm ships services with a **two-repo, two-pipeline** model on Jenkins +
-a shared Helm library + **Google Artifact Registry** (`asia-southeast1`):
+This repo is structured like gdncomm's other app repos (e.g. `mcp-customer-exp`)
+so the shared Jenkins pipeline can build and push the image — no manual push.
 
-- **This (app) repo** builds & pushes the image. [`Jenkinsfile`](Jenkinsfile)
-  uses `BlibliPipeline([type:'docker', ...])` to build the Dockerfile and push
-  to Artifact Registry. The Dockerfile defaults to `CMD ["start","--optimized"]`
-  so the image boots correctly when the chart runs it with no args.
-- **A separate deployment repo** (`nonprod-deployment-gdn-keycloak`, branch per
-  env) deploys it via the shared chart, supplying only Helm values. A template
-  for that repo lives in [`deploy/`](deploy/) — see [`deploy/README.md`](deploy/README.md).
+The build inputs are just three files at the repo root:
 
-**Keycloak-specific gaps to resolve with the platform team** (it's stateful and
-JVM-heavy, unlike the stateless Node apps the chart assumes): a PostgreSQL
-source (CloudSQL vs in-cluster), secret-backed DB/admin credentials, the health
-probe port (9000 vs 8080), and right-sized resources. All flagged in
-[`deploy/README.md`](deploy/README.md).
+| File | Role |
+|---|---|
+| [`Dockerfile`](Dockerfile) | Builds the optimized Keycloak image. Defaults to `CMD ["start","--optimized"]` so it boots with no extra args. |
+| [`.dockerignore`](.dockerignore) | Keeps the build context small (excludes local-dev/docs). |
+| [`Jenkinsfile`](Jenkinsfile) | `@Library('jenkins-ci-automation@develop')` → `BlibliPipeline([type:'docker', ...])`. Builds the Dockerfile and pushes to `asia-southeast1-docker.pkg.dev/nonprod-utility-233414/docker-releases/blibli-apps`, tribe/squad `iam`, `service_name: keycloak`. |
+
+Jenkins fetches this repo from GitHub, runs `BlibliPipeline`, and publishes the
+image to Artifact Registry (GCR). Deployment is a **separate repo** (Helm values
++ a deploy Jenkinsfile) to be created later — same split as `mcp-customer-exp` /
+`nonprod-deployment-gdn-mcp-customer-exp`.
+
+> **One thing to confirm with the platform team:** how `BlibliPipeline
+> type:'docker'` derives the image **version/tag**. For the Node app it came
+> from `package.json`; Keycloak has none, so the version likely needs a
+> `VERSION` file or a build parameter.
 
 ## Notes on the Dockerfile
 The image uses Keycloak's recommended two-stage build: stage 1 runs
