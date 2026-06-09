@@ -77,6 +77,34 @@ All settings have local-friendly defaults in `docker-compose.yml`; override via 
 
 ---
 
+## Database: external & DBA-managed
+
+Keycloak needs a Postgres database, but **we do not provision or ship one** for
+real environments — the **DBA provisions it**, and Keycloak simply points at it.
+
+The split is deliberate:
+
+- **Baked into the image (build time):** only the DB *vendor*, via `KC_DB=postgres`
+  in the [`Dockerfile`](Dockerfile). This just selects the Postgres JDBC driver.
+- **Provided at runtime (deploy time):** the actual connection — `KC_DB_URL`,
+  `KC_DB_USERNAME`, `KC_DB_PASSWORD`. In qa2/prod these come from the DBA and are
+  injected as secret-backed env by the (separate) deployment repo. **No host,
+  credential, or DB name is ever committed or baked into the image.**
+
+So the same image runs against any Postgres just by changing three env vars.
+
+| Mode | How | Postgres source |
+|---|---|---|
+| Local dev | `docker compose up --build` | bundled throwaway container in [`docker-compose.yml`](docker-compose.yml) |
+| Point at a real DB | `docker compose -f docker-compose.external-db.yml up --build` | external, set `KC_DB_URL`/`KC_DB_USERNAME`/`KC_DB_PASSWORD` in `.env` |
+| qa2 / prod | deployment repo (later) | DBA-provisioned; only the 3 `KC_DB_*` values supplied |
+
+The bundled Postgres in `docker-compose.yml` exists **only** so you can run
+Keycloak on your laptop without a database handy — it is never used in a real
+environment.
+
+---
+
 ## CI: build & push the image (Jenkins → Artifact Registry)
 
 This repo is structured like gdncomm's other app repos (e.g. `mcp-customer-exp`)
