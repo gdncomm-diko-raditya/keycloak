@@ -1,0 +1,14 @@
+# Local env / secrets
+.env
+
+# Build output (Step 3 SPI)
+providers/*.jar
+target/
+build/
+*.class
+
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+*.iml
