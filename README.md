@@ -62,8 +62,13 @@ on a shared pod/network using plain `podman` commands:
 
 ### Use Keycloak as the IdP for the local CAS server
 To make the local Apereo CAS server (`Code/cas`) delegate login to this Keycloak
-over OIDC **and** SAML, run `./scripts/setup-cas-realm.sh` (creates a `cas` realm
-with both clients + a test user) and follow [docs/cas-integration.md](docs/cas-integration.md).
+over OIDC **and** SAML:
+- `./scripts/setup-cas-realm.sh` — realm `cas` + OIDC/SAML clients + a test user
+- `./scripts/setup-organizations.sh` — **multitenancy**: Companies A/B/C as
+  Keycloak Organizations, 9 users, and the `organization` (tenant) claim wired
+  into both clients. See [docs/keycloak-multitenancy.md](docs/keycloak-multitenancy.md).
+- Then follow [docs/cas-integration.md](docs/cas-integration.md) (pac4j config +
+  the CAS service-registry step that actually shows the Keycloak login).
 
 ---
 

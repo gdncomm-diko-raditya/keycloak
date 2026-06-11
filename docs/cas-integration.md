@@ -78,13 +78,59 @@ Notes:
 
 ---
 
-## 3. Try it
+## 3. Service registry — REQUIRED to show the Keycloak login
+
+Two pac4j properties are not enough. gdn-cas has a custom login flow
+(`GdnInitializeLoginAction` → `GdnPrimaryLoginMode`) that decides what the login
+page shows **based on the registered service in the request**:
+
+| Mode | When | Login page shows |
+|---|---|---|
+| `NO_REGISTERED_SERVICE` | no/unknown `service` param | nothing (hidden) |
+| `DEFAULT` | service registered, no delegated policy | generic path |
+| `DELEGATED` | service's access strategy has **non-empty** delegated `allowedProviders` | the delegated IdP buttons (Keycloak) |
+
+So to make CAS show / use the Keycloak login for a service, you **register that
+service with `delegatedAuthenticationAllowedProviders` matching your pac4j
+client-names**. From source (`CreateGdnRegexServiceImpl`), a non-empty list sets
+`DefaultRegisteredServiceDelegatedAuthenticationPolicy.allowedProviders`, which
+flips the mode to `DELEGATED`.
+
+Register a service (values must equal the pac4j `client-name`s exactly):
+```bash
+curl -X POST http://localhost:8081/internal/gdn-service-registry/regex-service \
+  -H 'Content-Type: application/json' -d '{
+    "actor": "IAM-LOCAL",
+    "host": "^(http|https)://localhost:9999.*",
+    "name": "Local Keycloak Test",
+    "description": "verify Keycloak delegated login",
+    "delegatedAuthenticationAllowedProviders": ["KeycloakOidc", "KeycloakSaml"]
+  }'
+```
+- `host` is a **regex** that must match the `service` URL you log in for.
+  Escape dots as `\\.` in JSON (unescaped dots cause HTTP 500).
+- If a service already lacks the policy, use the upsert endpoint instead:
+  `PATCH /internal/gdn-service-registry/regex-service/properties` with
+  `delegatedAuthenticationAllowedProviders` (it replaces the access-strategy
+  delegated policy).
+- The service registry is cached and reloads periodically; allow a moment (or
+  restart CAS) for a new registration to take effect.
+
+## 4. Try it
 1. Start Keycloak: `./scripts/run-podman.sh up` (this repo).
-2. Start CAS on 8081 with the properties above.
-3. Open a CAS-protected service / the CAS login page. You should see
-   "KeycloakOidc" / "KeycloakSaml" delegated-login options.
-4. Pick one → you're redirected to Keycloak → log in as `casuser` / `password`
-   → redirected back to CAS, authenticated.
+2. Start CAS on 8081 with the OIDC **and** SAML pac4j properties above.
+3. Register the test service (section 3) for `http://localhost:9999`.
+4. Hit `http://localhost:8081/login?service=http://localhost:9999/`.
+   With the delegated policy set, CAS is in `DELEGATED` mode and shows the
+   **KeycloakOidc** / **KeycloakSaml** options (or, with `&client_name=KeycloakOidc`,
+   redirects straight to Keycloak's authorization endpoint).
+5. Log in as a tenant user, e.g. `usera1` / `password` → back to CAS,
+   authenticated, with `organization: ["company-a"]` available as an attribute.
+
+> Note: a prebuilt CAS jar may have **non-local (QA) backends baked in** — then
+> its service registry is the QA Mongo, not your local one, and local
+> registrations won't apply. Rebuild from source (with localhost `cas.properties`)
+> for a clean local run.
 
 ## How this maps to production
 Locally you hand-set `cas.authn.pac4j.*` and point at `localhost` Keycloak. In
