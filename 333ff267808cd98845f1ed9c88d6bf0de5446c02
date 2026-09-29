@@ -1,0 +1,47 @@
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.23",
+  "base_commit_sha": "333ff267808cd98845f1ed9c88d6bf0de5446c02",
+  "prompts": {
+    "6adcaff9ff8046dd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4124bddc-780d-4753-ae41-97dd0733865f",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Diko Raditya <diko.raditya@gdn-commerce.com>",
+      "messages": [],
+      "total_additions": 130,
+      "total_deletions": 0,
+      "accepted_lines": 130,
+      "overriden_lines": 0
+    },
+    "9ebb4ed24dc30b6f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5323bb9c-0a28-4ee0-92fb-6c93257cf450",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Diko Raditya <diko.raditya@gdn-commerce.com>",
+      "messages": [],
+      "total_additions": 1490,
+      "total_deletions": 242,
+      "accepted_lines": 1227,
+      "overriden_lines": 11
+    },
+    "caf385bed357f3bb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "cf0fdcad-d3c4-40ca-b51b-92a478d3ff06",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Diko Raditya <diko.raditya@gdn-commerce.com>",
+      "messages": [],
+      "total_additions": 800,
+      "total_deletions": 4,
+      "accepted_lines": 796,
+      "overriden_lines": 0
+    }
+  }
+}
