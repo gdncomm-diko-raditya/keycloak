@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Keycloak SPI provider: verify-only password hash provider that understands
+  the Jasypt SHA-256 digests produced by the legacy CAS Mongo login
+  (GenericPasswordEncoder: SHA-256, fixed salt, N iterations).
+
+  Purpose: import existing CAS hashes as-is so users keep their current
+  password. On first successful login Keycloak re-hashes to the realm default
+  (Argon2). No plaintext ever leaves the old system.
+
+  Produces a dependency-free jar (only JDK crypto) to drop into
+  /opt/keycloak/providers/.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.gdn.iam</groupId>
+  <artifactId>keycloak-jasypt-hash</artifactId>
+  <version>1.0.0</version>
+  <packaging>jar</packaging>
+
+  <properties>
+    <maven.compiler.release>17</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <!-- Only long-stable SPI is used; compiling against this runs on 26.1. -->
+    <keycloak.version>26.7.4</keycloak.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.keycloak</groupId>
+      <artifactId>keycloak-server-spi</artifactId>
+      <version>${keycloak.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.keycloak</groupId>
+      <artifactId>keycloak-core</artifactId>
+      <version>${keycloak.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.keycloak</groupId>
+      <artifactId>keycloak-server-spi-private</artifactId>
+      <version>${keycloak.version}</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <finalName>keycloak-jasypt-hash</finalName>
+  </build>
+</project>

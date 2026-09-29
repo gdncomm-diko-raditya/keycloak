@@ -11,6 +11,16 @@
 ARG KEYCLOAK_VERSION=26.1
 
 # ---------------------------------------------------------------------------
+# Stage 0 — provider-build: compile the custom SPI provider jar(s)
+# ---------------------------------------------------------------------------
+FROM maven:3.9-eclipse-temurin-17 AS provider-build
+WORKDIR /build/jasypt-hash
+# pom first for better layer caching, then sources.
+COPY providers/jasypt-hash/pom.xml pom.xml
+COPY providers/jasypt-hash/src ./src
+RUN mvn -B -q package
+
+# ---------------------------------------------------------------------------
 # Stage 1 — builder: produce an augmented/optimized server
 # ---------------------------------------------------------------------------
 FROM quay.io/keycloak/keycloak:${KEYCLOAK_VERSION} AS builder
@@ -22,10 +32,10 @@ ENV KC_DB=postgres
 ENV KC_HEALTH_ENABLED=true
 ENV KC_METRICS_ENABLED=true
 
-# Steps 2 & 3 of the exploration drop custom themes and SPI providers here.
-# They are picked up by the build below. Kept as commented examples for now:
-# COPY themes/   /opt/keycloak/themes/
-# COPY providers/*.jar /opt/keycloak/providers/
+# Custom SPI providers (compiled in the provider-build stage) are dropped here
+# and baked into the server by `kc.sh build` below. Add themes the same way.
+# COPY themes/ /opt/keycloak/themes/
+COPY --from=provider-build /build/jasypt-hash/target/keycloak-jasypt-hash.jar /opt/keycloak/providers/
 
 WORKDIR /opt/keycloak
 RUN /opt/keycloak/bin/kc.sh build
